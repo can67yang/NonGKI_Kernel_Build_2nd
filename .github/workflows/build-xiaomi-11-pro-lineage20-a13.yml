@@ -11,7 +11,7 @@ env:
 
   CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu-"
   EXTRA_CMDS : "LD=ld.lld LLVM=1 LLVM_IAS=1"
-  KCFLAGS: "-Wno-return-type -Wno-strict-prototypes"
+  KCFLAGS: "-Wno-return-type -Wno-strict-prototypes -Wno-implicit-int"
 
   KERNEL_SOURCE : "https://github.com/Xiaomi-SM8350-Development/kernel_xiaomi_sm8350.git"
   KERNEL_BRANCH : "lineage-20_staging"
@@ -136,6 +136,9 @@ jobs:
           # Fix Qualcomm headers: use __uNN types instead of uintNN_t
           find . -name "ipa_qmi_service_v01.h" -exec sed -i 's/\buint16_t\b/__u16/g' {} \;
           find . -path "*/audio/sound/*.h" -exec sed -i 's/\buint32_t\b/__u32/g' {} \;
+
+          # Fix Xiaomi charger adapter types (missing in LineageOS kernel)
+          sed -i '/ADAPTER_PRIVATE_PD_50W/a\\tADAPTER_XIAOMI_PD_50W,\n\tADAPTER_XIAOMI_PD_60W,\n\tADAPTER_XIAOMI_PD_100W,\n\tADAPTER_XIAOMI_PD_30W,\n\tADAPTER_VOICE_BOX_30W,\n\tADAPTER_XIAOMI_QC3_20W,\n\tADAPTER_XIAOMI_PD_20W,\n\tADAPTER_XIAOMI_CAR_20W,' ./include/linux/power_supply.h
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
