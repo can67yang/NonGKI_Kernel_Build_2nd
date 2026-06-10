@@ -11,7 +11,7 @@ env:
 
   CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu-"
   EXTRA_CMDS : "LD=ld.lld LLVM=1 LLVM_IAS=1"
-  KCFLAGS: "-Wno-return-type -Wno-strict-prototypes -Wno-implicit-int"
+  KCFLAGS: "-Wno-return-type -Wno-strict-prototypes -Wno-implicit-int -Wno-array-parameter"
 
   KERNEL_SOURCE : "https://github.com/Xiaomi-SM8350-Development/kernel_xiaomi_sm8350.git"
   KERNEL_BRANCH : "lineage-20_staging"
