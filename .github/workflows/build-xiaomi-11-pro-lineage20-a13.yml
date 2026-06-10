@@ -10,7 +10,7 @@ env:
   DEVICE_CODENAME : "star"
 
   CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu-"
-  EXTRA_CMDS : "LD=ld.lld LLVM=1 LLVM_IAS=1"
+  EXTRA_CMDS : "LD=ld.lld LLVM=1 LLVM_IAS=1 KCFLAGS=-Wno-return-type"
 
   KERNEL_SOURCE : "https://github.com/Xiaomi-SM8350-Development/kernel_xiaomi_sm8350.git"
   KERNEL_BRANCH : "lineage-20_staging"
@@ -132,8 +132,9 @@ jobs:
           echo "CONFIG_EROFS_FS_POSIX_ACL=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_EROFS_FS_SECURITY=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
-          # Fix ipa_qmi_service_v01.h header test (use __u16 instead of uint16_t)
-          find . -name "ipa_qmi_service_v01.h" -exec sed -i 's/uint16_t/__u16/g' {} \;
+          # Fix Qualcomm headers: use __uNN types instead of uintNN_t
+          find . -name "ipa_qmi_service_v01.h" -exec sed -i 's/\buint16_t\b/__u16/g' {} \;
+          find . -path "*/audio/sound/*.h" -exec sed -i 's/\buint32_t\b/__u32/g' {} \;
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
