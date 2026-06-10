@@ -132,6 +132,9 @@ jobs:
           echo "CONFIG_EROFS_FS_POSIX_ACL=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_EROFS_FS_SECURITY=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
+          # Fix ipa_qmi_service_v01.h header test (use __u16 instead of uint16_t)
+          find . -name "ipa_qmi_service_v01.h" -exec sed -i 's/uint16_t/__u16/g' {} \;
+
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
 
