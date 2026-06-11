@@ -127,6 +127,8 @@ jobs:
           echo "CONFIG_LTO_CLANG_THIN=n" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_SHADOW_CALL_STACK=n" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_RELR=n" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_STACKPROTECTOR=n" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_STACKPROTECTOR_STRONG=n" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
           # EROFS
           echo "CONFIG_EROFS_FS=y" >> ./arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
