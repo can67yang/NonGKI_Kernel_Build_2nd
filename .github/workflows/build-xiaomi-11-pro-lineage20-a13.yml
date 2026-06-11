@@ -140,6 +140,11 @@ jobs:
           # Fix Xiaomi charger adapter types (missing in LineageOS kernel)
           sed -i '/ADAPTER_PRIVATE_PD_50W/a\\tADAPTER_XIAOMI_PD_50W,\n\tADAPTER_XIAOMI_PD_60W,\n\tADAPTER_XIAOMI_PD_100W,\n\tADAPTER_XIAOMI_PD_30W,\n\tADAPTER_VOICE_BOX_30W,\n\tADAPTER_XIAOMI_QC3_20W,\n\tADAPTER_XIAOMI_PD_20W,\n\tADAPTER_XIAOMI_CAR_20W,' ./include/linux/power_supply.h
 
+          # Fix FTS touchscreen: add missing ftsTime.o to dual and SPI Makefiles
+          # (patch targets fts_521 but kernel has fts_dual and fts_spi)
+          sed -i 's/ftsTest.o ftsTool.o/ftsTest.o ftsTime.o ftsTool.o/' ./drivers/input/touchscreen/fts_dual/secondary/fts_lib/Makefile
+          sed -i 's/ftsTest.o ftsTool.o/ftsTest.o ftsTime.o ftsTool.o/' ./drivers/input/touchscreen/fts_spi/fts_lib/Makefile
+
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
 
