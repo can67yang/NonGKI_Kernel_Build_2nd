@@ -118,7 +118,21 @@ jobs:
         run: |
           # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
-          # Nothing
+
+          # Fix: Add missing set_isdb_breakpoint field to kgsl_device struct
+          # The KGSL debugfs code references device->set_isdb_breakpoint but
+          # some kernel sources (ASB-2024-10-05) are missing this field
+          KGS_DEVICE_H="drivers/gpu/msm/kgsl_device.h"
+          if [ -f "$KGS_DEVICE_H" ]; then
+            if ! grep -q "set_isdb_breakpoint" "$KGS_DEVICE_H"; then
+              echo "Adding missing set_isdb_breakpoint field to kgsl_device struct"
+              sed -i '/qdss_gfx_virt;/a\\tbool set_isdb_breakpoint;' "$KGS_DEVICE_H"
+            else
+              echo "set_isdb_breakpoint already exists, skipping"
+            fi
+          else
+            echo "Warning: $KGS_DEVICE_H not found"
+          fi
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
