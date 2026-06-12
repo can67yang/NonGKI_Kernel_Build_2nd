@@ -120,26 +120,21 @@ jobs:
           cd $GITHUB_WORKSPACE/device_kernel
 
           # Fix missing set_isdb_breakpoint in kgsl_device struct
-          cat > /tmp/fix_kgsl.py << 'PYEOF'
-import glob, os
-for path in glob.glob('**/kgsl_device.h', recursive=True):
-    fp = os.path.join(os.getcwd(), path)
-    with open(fp) as f:
-        c = f.read()
-    if 'set_isdb_breakpoint' in c:
-        print('[SKIP]', path, '- already has set_isdb_breakpoint')
-        continue
-    old = 'void __iomem *qdss_gfx_virt;'
-    new = 'void __iomem *qdss_gfx_virt;\n\tbool set_isdb_breakpoint;'
-    if old in c:
-        c = c.replace(old, new, 1)
-        with open(fp, 'w') as f:
-            f.write(c)
-        print('[FIXED]', path, '- added set_isdb_breakpoint')
-    else:
-        print('[WARN]', path, '- qdss_gfx_virt not found')
-PYEOF
-          python3 /tmp/fix_kgsl.py
+          python3 -c "
+          import glob, os
+          for path in glob.glob('**/kgsl_device.h', recursive=True):
+              fp = os.path.join(os.getcwd(), path)
+              with open(fp) as f:
+                  c = f.read()
+              if 'set_isdb_breakpoint' in c:
+                  continue
+              old = 'void __iomem *qdss_gfx_virt;'
+              if old in c:
+                  c = c.replace(old, old + chr(10) + chr(9) + 'bool set_isdb_breakpoint;', 1)
+                  with open(fp, 'w') as f:
+                      f.write(c)
+                  print('Fixed:', path)
+          "
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
