@@ -119,59 +119,27 @@ jobs:
           # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
 
-          # Fix: Add missing set_isdb_breakpoint field to kgsl_device struct
-          # The KGSL debugfs code references device->set_isdb_breakpoint but
-          # some kernel sources (ASB-2024-10-05) are missing this field
-          echo "=== Fixing KGSL device struct ==="
-          python3 -c "
-import os, glob
-
-# Find the header file
-kernel_root = os.getcwd()
-matches = glob.glob('**/kgsl_device.h', recursive=True)
-print(f'Searching in: {kernel_root}')
-print(f'Found kgsl_device.h files: {matches}')
-
-for path in matches:
-    full_path = os.path.join(kernel_root, path)
-    with open(full_path, 'r') as f:
-        content = f.read()
-
-    if 'bool set_isdb_breakpoint' in content:
-        print(f'  [SKIP] {path} - already has set_isdb_breakpoint')
+          # Fix missing set_isdb_breakpoint in kgsl_device struct
+          cat > /tmp/fix_kgsl.py << 'PYEOF'
+import glob, os
+for path in glob.glob('**/kgsl_device.h', recursive=True):
+    fp = os.path.join(os.getcwd(), path)
+    with open(fp) as f:
+        c = f.read()
+    if 'set_isdb_breakpoint' in c:
+        print('[SKIP]', path, '- already has set_isdb_breakpoint')
         continue
-
-    # Find the qdss_gfx_virt field and add set_isdb_breakpoint after it
     old = 'void __iomem *qdss_gfx_virt;'
     new = 'void __iomem *qdss_gfx_virt;\n\tbool set_isdb_breakpoint;'
-
-    if old in content:
-        content = content.replace(old, new, 1)
-        with open(full_path, 'w') as f:
-            f.write(content)
-        print(f'  [FIXED] {path} - added set_isdb_breakpoint after qdss_gfx_virt')
+    if old in c:
+        c = c.replace(old, new, 1)
+        with open(fp, 'w') as f:
+            f.write(c)
+        print('[FIXED]', path, '- added set_isdb_breakpoint')
     else:
-        # Try alternative: find the closing brace of struct kgsl_device
-        if 'struct kgsl_device {' in content:
-            print(f'  [WARN] {path} - qdss_gfx_virt not found, trying end of struct')
-            # Add before the first }; that closes the struct
-            content = content.replace('struct kgsl_device {', 'struct kgsl_device {', 1)
-            # Find the matching closing brace
-            depth = 0
-            lines = content.split('\n')
-            for i, line in enumerate(lines):
-                depth += line.count('{') - line.count('}')
-                if depth == 0 and i > 0 and line.strip().startswith('};') and 'kgsl_device' in content[:content.index(line)]:
-                    lines.insert(i, '\tbool set_isdb_breakpoint;')
-                    with open(full_path, 'w') as f:
-                        f.write('\n'.join(lines))
-                    print(f'  [FIXED] {path} - added set_isdb_breakpoint at end of struct')
-                    break
-            else:
-                print(f'  [FAIL] {path} - could not locate insertion point')
-        else:
-            print(f'  [SKIP] {path} - not the main kgsl_device definition')
-"
+        print('[WARN]', path, '- qdss_gfx_virt not found')
+PYEOF
+          python3 /tmp/fix_kgsl.py
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
