@@ -12,7 +12,7 @@ env:
   CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu-"
   EXTRA_CMDS : "LD=ld.lld LLVM=1 LLVM_IAS=1"
 
-  KERNEL_SOURCE : "https://github.com/EndCredits/android_kernel_xiaomi_sm8350-miui"
+  KERNEL_SOURCE : "https://github.com/EndCredits/android_kernel_xiaomi_sm8350-miui.git"
   KERNEL_BRANCH : "ASB-2024-10-05"
 
   CLANG_SOURCE : "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz"
@@ -120,16 +120,23 @@ jobs:
           cd $GITHUB_WORKSPACE/device_kernel
 
           # Fix missing set_isdb_breakpoint in kgsl_device struct
+          # The field may exist inside #if 0 block (disabled by preprocessor),
+          # so check if it's actually in active code by clearing #if 0 blocks first
           python3 -c "
-          import glob, os
+          import glob, os, re
           for path in glob.glob('**/kgsl_device.h', recursive=True):
               fp = os.path.join(os.getcwd(), path)
               with open(fp) as f:
                   c = f.read()
-              if 'set_isdb_breakpoint' in c:
+              # Remove #if 0 ... #endif blocks for detection only
+              active = re.sub(r'#if 0\s*.*?#endif', '', c, flags=re.DOTALL)
+              if 'set_isdb_breakpoint' in active:
                   continue
               old = 'void __iomem *qdss_gfx_virt;'
               if old in c:
+                  # Remove existing declaration (if inside #if 0 block)
+                  c = c.replace('bool set_isdb_breakpoint;', '')
+                  # Add it as active code after qdss_gfx_virt
                   c = c.replace(old, old + chr(10) + chr(9) + 'bool set_isdb_breakpoint;', 1)
                   with open(fp, 'w') as f:
                       f.write(c)
