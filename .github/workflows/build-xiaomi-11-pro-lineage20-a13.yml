@@ -143,6 +143,15 @@ jobs:
                   print('Fixed:', path)
           "
 
+          # Disable features that break Clang 19 LTO linking
+          echo "CONFIG_STACKPROTECTOR=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_STACKPROTECTOR_STRONG=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_LTO_CLANG=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_LTO_CLANG_THIN=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_SHADOW_CALL_STACK=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo "CONFIG_RELR=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
 
