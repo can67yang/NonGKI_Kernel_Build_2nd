@@ -43,8 +43,8 @@ env:
 
   BOOT_SOURCE : ""
 
-  NEED_DTBO : true
-  NEED_SAFE_DTBO : true
+  NEED_DTBO : false
+  NEED_SAFE_DTBO : false
 
   ROM_TEXT : "miui_a13"
 
@@ -151,22 +151,6 @@ jobs:
           echo "CONFIG_LTO_CLANG_THIN=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_SHADOW_CALL_STACK=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_RELR=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-
-          # Embed FTS touchscreen firmware for in-display fingerprint
-          # st_fts_k2.ftb from the device is baked directly into the kernel image
-          # so it's available immediately at driver probe time.
-          mkdir -p firmware
-          cp $GITHUB_WORKSPACE/Firmware/st_fts_k2.ftb firmware/
-          echo 'CONFIG_EXTRA_FIRMWARE="st_fts_k2.ftb"' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-          echo 'CONFIG_EXTRA_FIRMWARE_DIR="firmware"' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-
-          # Build Goodix FoD (in-display fingerprint) driver from source instead of
-          # using vendor prebuilt module. This eliminates the module_layout CRC mismatch
-          # (disagrees about version of symbol module_layout) which causes
-          # GF_ERROR_BRIGHTNESS_NOT_STABILITY at runtime.
-          echo 'CONFIG_INPUT_FINGERPRINT=y' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-          echo 'CONFIG_FINGERPRINT_FP_VREG_CONTROL=y' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
-          echo 'CONFIG_FINGERPRINT_GOODIX_FOD=y' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
