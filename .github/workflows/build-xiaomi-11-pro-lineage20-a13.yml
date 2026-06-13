@@ -152,9 +152,13 @@ jobs:
           echo "CONFIG_SHADOW_CALL_STACK=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
           echo "CONFIG_RELR=n" >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
-          # Fix FTS touchscreen firmware loading path for in-display fingerprint
-          # st_fts_k2.ftb is in /vendor/firmware/ but kernel defaults to /lib/firmware/
-          sed -i 's/cmdline=""/cmdline="firmware_class.path=\/vendor\/firmware"/' Anykernel3/anykernel.sh
+          # Embed FTS touchscreen firmware for in-display fingerprint
+          # st_fts_k2.ftb from the device is baked directly into the kernel image
+          # so it's available immediately at driver probe time.
+          mkdir -p firmware
+          cp $GITHUB_WORKSPACE/Firmware/st_fts_k2.ftb firmware/
+          echo 'CONFIG_EXTRA_FIRMWARE="st_fts_k2.ftb"' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
+          echo 'CONFIG_EXTRA_FIRMWARE_DIR="firmware"' >> arch/arm64/configs/${{ env.DEFCONFIG_NAME }}
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
