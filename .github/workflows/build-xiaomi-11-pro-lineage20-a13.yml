@@ -164,6 +164,11 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
+      - name: 🗑️ Remove dtbo.img before packing
+        run: |
+          rm -f $GITHUB_WORKSPACE/device_kernel/out/arch/arm64/boot/dtbo.img
+          echo "Removed dtbo.img (NEED_DTBO is false)"
+
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
